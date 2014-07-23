@@ -1,9 +1,14 @@
-var util = require("util");
-var irc = require("irc");
-const log_length = 20;
+const util = require("util");
+const irc = require("irc");
+const _ = require("lodash");
+
+const chanlog = require("./chanlog.js");
+
+var logger = new chanlog();
 
 var client = new irc.Client(
-  '10.0.0.69',
+  //'10.0.0.69',
+  'irc.freenode.net',
   'JigaS',
   {
     port: 6667,
@@ -26,21 +31,24 @@ var command_functions = {
 
       client.notice(command.origin, message);
     },
+
   repeat: function (client, command) {
-    var chan = command.origin;
-
-  }
-
-}
-
-function Logger () {
-  this.channels = {};
-  this.log = function (channel, who, msg) {
-    this.channels[channel].push("<" + who + "> " + msg);
-    if (this.channels[channel].length > log_length) {
-      this.channels[channel].shift(); //remove the first one
+    var limit, messages;
+    if (command.text.length > 0) {
+      limit = parseInt(command.text);
     }
+    if (limit>0) {
+      messages = logger.get(command.origin, limit);
+    } else {
+      messages = logger.get(command.origin);
+    }
+    
+    _.forEach(messages, function (message) {
+      client.say(command.origin, message);
+    });
+
   }
+
 }
 
 function CommandData (nick, origin, command, text, original) {
@@ -61,7 +69,7 @@ function getCommand(text) {
 
 client.on("message",
           function (nick, to, text, message) {
-            console.log("%s send to %s: %s", nick, to, text);
+            console.log("%s sent to %s: %s", nick, to, text);
             var command = getCommand(text);
             if (command != null) {
               console.log("Got " + command[0] + " with msg " + command[1]);
@@ -71,6 +79,8 @@ client.on("message",
                 client.say(to, "Huh? I don't have that command. Valid commands are: " +
                            Object.keys(command_functions));
               }
+            } else { //log non-commands
+              logger.log(to, nick, text);
             }
           });
 
