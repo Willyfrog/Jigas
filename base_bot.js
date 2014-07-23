@@ -51,9 +51,9 @@ function BaseBot (hostname, nick, options) {
   var that = this;
   this.client.on("registered", function() {
     //initialize base commands upon connecting to the server
-    _.forEach(Object.keys(command_functions), function (event) {
+    _.forEach(Object.keys(baseCommands), function (event) {
       if (process.EventEmitter.listenerCount(that, event) == 0) // but only register it once
-        that.on(event, command_functions[event]);
+        that.on(event, baseCommands[event]);
       //console.log("%s: %s", event, process.EventEmitter.listenerCount(that, event));
     })
   });
@@ -64,15 +64,15 @@ function BaseBot (hostname, nick, options) {
                    var command = getCommand(text);
                    if (command != null) {
                      console.log("Got " + command[0] + " with msg " + command[1]);
-                     //if (command_functions.hasOwnProperty(command[0])){
+                     //if (baseCommands.hasOwnProperty(command[0])){
                      console.log("this ", this);
                      if (process.EventEmitter.listenerCount(that, command[0])>0) {
-                       //command_functions[command[0]](client, new CommandData(nick, to, command[0], command[1], message));
+                       //baseCommands[command[0]](client, new CommandData(nick, to, command[0], command[1], message));
                        that.emit(command[0], this, new CommandData(nick, to, command[0], command[1], message));
                      } else {
                        console.log("Invalid command %s", command[0]);
                        this.say(to, "Huh? I don't have that command. Valid commands are: " +
-                           Object.keys(command_functions));
+                           Object.keys(baseCommands));
                      }
                    } else { //log non-commands
                      logger.log(to, nick, text);
@@ -87,7 +87,7 @@ function BaseBot (hostname, nick, options) {
 }
 util.inherits(BaseBot, process.EventEmitter);
 
-var command_functions = {
+var baseCommands = {
     /* Hello world! */
     hola: function (client, command) {
       var message;
@@ -171,3 +171,4 @@ function getCommand(text) {
 
 module.exports.BaseBot = BaseBot;
 module.exports.CommandData = CommandData;
+module.exports.baseCommands = baseCommands;
