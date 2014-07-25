@@ -29,8 +29,11 @@ var default_options = {
 };
 
 function BaseBot (hostname, nick, options) {
+  var that = this;
+
   this.hostname = hostname;
   this.nick = nick;
+
   if (typeof options === "undefined") {
     this.opts = default_options;
   } else {
@@ -38,7 +41,8 @@ function BaseBot (hostname, nick, options) {
   }
 
   this.client = new irc.Client(hostname, nick, this.opts);
-  //this.unregister_command
+  process.EventEmitter.call(this); // it's an Event Emmiter
+
   this.client.on("error", function (data) {
     //forward errors if something is attached to error event
     if (process.EventEmitter.listenerCount(this, 'error')>0) {
@@ -48,14 +52,9 @@ function BaseBot (hostname, nick, options) {
     }
   });
 
-  var that = this;
+  // load commands and inlines on connection
   this.client.on("registered", function() {
-    //initialize base commands upon connecting to the server
-    _.forEach(Object.keys(baseCommands), function (event) {
-      if (process.EventEmitter.listenerCount(that, event) == 0) // but only register it once
-        that.on(event, baseCommands[event]);
-      //console.log("%s: %s", event, process.EventEmitter.listenerCount(that, event));
-    })
+    //initialize base commands
   });
 
   this.client.on("message",
@@ -64,8 +63,6 @@ function BaseBot (hostname, nick, options) {
                    var command = getCommand(text);
                    if (command != null) {
                      console.log("Got " + command[0] + " with msg " + command[1]);
-                     //if (baseCommands.hasOwnProperty(command[0])){
-                     console.log("this ", this);
                      if (process.EventEmitter.listenerCount(that, command[0])>0) {
                        //baseCommands[command[0]](client, new CommandData(nick, to, command[0], command[1], message));
                        that.emit(command[0], this, new CommandData(nick, to, command[0], command[1], message));
@@ -83,7 +80,9 @@ function BaseBot (hostname, nick, options) {
     this.client.connect(function() {console.log("connected");});
   }
 
-  process.EventEmitter.call(this); // it's an Event Emmiter
+  _.forEach(Object.keys(baseCommands), function (event) {
+    this.on(event, baseCommands[event]);
+  }, this);
 }
 util.inherits(BaseBot, process.EventEmitter);
 
