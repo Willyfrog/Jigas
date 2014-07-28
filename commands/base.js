@@ -44,9 +44,9 @@ module.exports = {
   /* Simple echo */
   echo: function (client, command) {
     if (command.text.length > 0) {
-      client.say(command.text);
+      client.say(command.origin, command.text);
     } else {
-      client.say("What do you want me to say?");
+      client.say(command.origin, "What do you want me to say?");
     }
 
   },
@@ -54,7 +54,7 @@ module.exports = {
   join: function (client, command) {
     var channelString = command.text.trim();
     if (_.isEmpty(channelString)) {
-      client.say(command.to, "Which channel should I join?");
+      client.say(command.origin, "Which channel should I join?");
 
     } else {
       var channels = _.map(
@@ -76,6 +76,6 @@ module.exports = {
     _.forEach(command, function(item) {
       console.log("Argument: %s", util.inspect(item));
     });
-    client.say(command.to, "message logged");
+    client.say(command.origin, "message logged");
   }
 }
