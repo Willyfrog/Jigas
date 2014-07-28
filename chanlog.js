@@ -1,24 +1,49 @@
-function ChannelLogger (log_length) {
+const util = require("util");
 
-  this.log_length = (typeof log_length !== "undefined" ? log_length : 20);
+function ArrayLog(logLength) {
+  this.logLength = logLength;
+  Array.apply(this,
+              Array.prototype.slice.call(arguments, 1));
+  /*
+   * function for easing the getting of a channel's history
+   * */
+  this.get = function (limit) {
+    var max = (typeof limit !== "undefined" ? limit : this.logLength);
+    return this.slice(-max, this.length);
+  };
+  /*
+   * function for logging what a user said
+   * */
+  this.log = function (who, msg) {
+    this.push("<" + who + "> " + msg);
+
+    if (this.length > this.logLength) {
+      this.shift(); //remove the first one
+    }
+    return this.length;
+  };
+}
+util.inherits(ArrayLog, Array);
+
+function ChannelLogger (logLength) {
+
+  this.logLength = (typeof logLength !== "undefined" ? logLength : 20);
   this.channels = {};
 
   this.log = function (channel, who, msg) {
     if (typeof this.channels[channel] === "undefined") {
-      this.channels[channel] = new Array();
+      this.channels[channel] = new ArrayLog(this.logLength);
     }
-    this.channels[channel].push("<" + who + "> " + msg);
-
-    if (this.channels[channel].length > this.log_length) {
-      this.channels[channel].shift(); //remove the first one
-    }
+    return this.channels[channel].log(who, msg);
   },
 
   this.get = function (channel, limit) {
-    var max = (typeof limit !== "undefined" ? limit : this.log_length);
-    var chan = this.channels[channel];
-    return chan.slice(-max, chan.length);
-  }
+    return this.channels[channel].get(limit);
+  };
+
+  this.getChannel = function (channel) {
+    return this.channels[channel];
+  };
 }
 
 module.exports = ChannelLogger;
