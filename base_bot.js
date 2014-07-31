@@ -55,9 +55,9 @@ function BaseBot (hostname, nick, options) {
   });
 
   /* convenience function */
-  this.say = function(to, message) {
+  this.say = function (to, message) {
     this.client.say(to, message);
-  }
+  };
 
   // load commands and inlines on connection
   this.client.on("registered", function() {
