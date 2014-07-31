@@ -3,9 +3,16 @@ const irc = require("irc");
 const _ = require("lodash");
 
 
+function makeChan(channame) {
+  if (channame[0] != "#") {
+    return "#" + channame;
+  }
+  return channame;
+}
+
 module.exports = {
     /* Hello world! */
-    hola: function (client, command) {
+    hola: function (bot, command) {
       var message;
       if (command.text.length > 0) {
         message = "Hello " + command.text;
@@ -13,16 +20,16 @@ module.exports = {
         message = "Hello there " + command.nick;
       }
 
-      client.notice(command.origin, message);
+      bot.client.notice(command.origin, message);
     },
 
   /* Repeat last messages on the channel */
-  repeat: function (client, command) {
+  repeat: function (bot, command) {
     var limit, messages, linesRepeated;
     if (typeof command.channelHistory === "undefined" ||
         command.channelHistory.length === 0) {
-      client.say(command.origin, "There is no history for this channel");
-      return 0
+      bot.say(command.origin, "There is no history for this channel");
+      return 0;
     }
     if (command.text.length > 0) {
       limit = parseInt(command.text);
@@ -36,25 +43,25 @@ module.exports = {
     }
 
     _.forEach(messages, function (message) {
-      client.say(command.origin, message);
+      bot.say(command.origin, message);
     });
     return linesRepeated;
   },
 
   /* Simple echo */
-  echo: function (client, command) {
+  echo: function (bot, command) {
     if (command.text.length > 0) {
-      client.say(command.origin, command.text);
+      bot.say(command.origin, command.text);
     } else {
-      client.say(command.origin, "What do you want me to say?");
+      bot.say(command.origin, "What do you want me to say?");
     }
 
   },
 
-  join: function (client, command) {
+  join: function (bot, command) {
     var channelString = command.text.trim();
     if (_.isEmpty(channelString)) {
-      client.say(command.origin, "Which channel should I join?");
+      bot.say(command.origin, "Which channel should I join?");
 
     } else {
       var channels = _.map(
@@ -66,16 +73,16 @@ module.exports = {
           return makeChan(item);
         });
       _.forEach(channels, function(channel) {
-        client.join(channel);
+        bot.client.join(channel);
       });
     }
   },
 
   /*debug parameters received*/
-  console: function (client, command) {
+  console: function (bot, command) {
     _.forEach(command, function(item) {
       console.log("Argument: %s", util.inspect(item));
     });
-    client.say(command.origin, "message logged");
+    bot.say(command.origin, "message logged");
   }
-}
+};

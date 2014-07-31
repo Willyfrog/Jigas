@@ -4,6 +4,8 @@ const _ = require("lodash");
 
 const chanlog = require("./chanlog.js");
 var baseCommands = require("./commands/base.js");
+var duckduckCommands = require("./commands/duckduck.js");
+var commands = [baseCommands, duckduckCommands];
 
 /*
  * Command Data
@@ -33,7 +35,7 @@ function BaseBot (hostname, nick, options) {
 
   this.hostname = hostname;
   this.nick = nick;
-
+  this.availableCommands = [];
   this.logger = new chanlog();
 
   if (typeof options === "undefined") {
@@ -71,10 +73,12 @@ function BaseBot (hostname, nick, options) {
                      console.log("Got " + command[0] + " with msg " + command[1]);
                      if (process.EventEmitter.listenerCount(that, command[0])>0) {
                        //baseCommands[command[0]](client, new CommandData(nick, to, command[0], command[1], message));
-                       that.emit(command[0], this, new CommandData(nick, to, command[0], command[1], message, that.logger.getChannel(to)));
+                       that.emit(command[0],
+                                 that,
+                                 new CommandData(nick, to, command[0], command[1], message, that.logger.getChannel(to)));
                      } else {
                        that.client.say(to, "Huh? I don't have that command. Valid commands are: " +
-                           Object.keys(baseCommands));
+                           Object.keys(that.availableCommands));
                      }
                    } else { //log non-commands
                      that.logger.log(to, nick, text);
@@ -92,18 +96,16 @@ function BaseBot (hostname, nick, options) {
     console.log("Loaded %s", command);
   };
 
-  _.forEach(Object.keys(baseCommands), function (event) {
-    this.loadCommand(event, baseCommands[event]);
+  _.forEach(commands, function (command_list) {
+    _.forEach(Object.keys(command_list), function (event) {
+      this.loadCommand(event, command_list[event]);
+      this.availableCommands.push(event);
+    }, this);
   }, this);
+
 }
 util.inherits(BaseBot, process.EventEmitter);
 
-function makeChan(channame) {
-  if (channame[0] != "#") {
-    return "#" + channame;
-  }
-  return channame;
-}
 
 function getCommand(text) {
   var command = text.match(/!(\w+)\s*(.*)/);
