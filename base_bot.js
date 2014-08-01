@@ -58,7 +58,14 @@ function BaseBot (hostname, nick, options) {
 
   /* convenience function */
   this.say = function (to, message) {
-    this.client.say(to, message);
+    if (typeof to === "undefined") {
+      console.log("Something tried to send a message to an empty channel. message was: %s", message);
+    }
+    if (_.isEmpty(message)) {
+      console.log("Something tried to send an empty message to %s", to);
+    } else {
+      this.client.say(to, message);
+    }
   };
 
   // load commands and inlines on connection
