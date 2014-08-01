@@ -22,6 +22,8 @@ function CommandData (nick, origin, command, text, original, channelHistory) {
 }
 
 var default_options = {
+  nick: 'Jigas',
+  hostname: '10.0.0.69',
   port: 6667,
   floodProtection: true,
   channels: ["#jigas"],
@@ -30,21 +32,22 @@ var default_options = {
   autoConnect: false
 };
 
-function BaseBot (hostname, nick, options) {
+function BaseBot (options) {
   var that = this;
 
-  this.hostname = hostname;
-  this.nick = nick;
   this.availableCommands = [];
   this.logger = new chanlog();
 
-  if (typeof options === "undefined") {
+  this.opts = default_options;
+
+  if (typeof options !== "undefined") {
     this.opts = default_options;
-  } else {
-    this.opts = options;
+    _.forEach(Object.keys(options), function (opt) {
+      this.opts[opt] = options[opt];
+    }, this);
   }
 
-  this.client = new irc.Client(hostname, nick, this.opts);
+  this.client = new irc.Client(this.opts.hostname, this.opts.nick, this.opts);
   process.EventEmitter.call(this); // it's an Event Emmiter
 
   this.client.on("error", function (data) {
