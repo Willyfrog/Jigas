@@ -1,11 +1,13 @@
 const util = require("util");
 const irc = require("irc");
 const _ = require("lodash");
+const path = require("path");
+const fs = require("fs");
 
 const chanlog = require("./chanlog.js");
-var baseCommands = require("./commands/base.js");
-var duckduckCommands = require("./commands/duckduck.js");
-var commands = [baseCommands, duckduckCommands];
+//var baseCommands = require("./commands/base.js");
+//var duckduckCommands = require("./commands/duckduck.js");
+//var commands = [baseCommands, duckduckCommands];
 
 /*
  * Command Data
@@ -29,7 +31,10 @@ var default_options = {
   channels: ["#jigas"],
   userName: "JigaS",
   realName: "Gigas JS IRC Bot",
-  autoConnect: false
+  autoConnect: false,
+  commands: ["base"],
+  inlines: [],
+  commandPaths: ["./", "./node_modules/jigas"]
 };
 
 function BaseBot (options) {
@@ -46,6 +51,38 @@ function BaseBot (options) {
       this.opts[opt] = options[opt];
     }, this);
   }
+  console.log("options: %s", util.inspect(this.opts));
+
+  this.commands = [];
+  this.inlines = [];
+
+  this._autoRequire = function (partialPath, into) {
+    _.forEach(this.opts.commandPaths, function (rel) {
+      var fullPath = path.resolve(path.join(rel, partialPath));
+      if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile()) {
+        try {
+          into.push(require(fullPath));
+        } catch (e) {
+          console.log("Error loading %s: %s", fullPath, e);
+        }
+      }
+    }, this);
+  };
+
+  this.findCommands = function () {
+    //fixme: remove all listeners so it can be used to reload commands
+    _.forEach(this.opts.commands, function (commandModule) {
+      this._autoRequire(path.join("commands", commandModule + ".js"), this.commands);
+    }, this);
+  };
+
+  this.findInlines = function () {
+    //fixme: remove all listeners so it can be used to reload inlines
+    _.forEach(this.opts.inlines, function (inlineModule) {
+      this._autoRequire(path.join("inlines", inlineModule + ".js"), this.inlines);
+    }, this);
+  };
+
 
   this.client = new irc.Client(this.opts.hostname, this.opts.nick, this.opts);
   process.EventEmitter.call(this); // it's an Event Emmiter
@@ -76,6 +113,9 @@ function BaseBot (options) {
     //initialize base commands
   });
 
+  /*
+   * React on any message
+   */
   this.client.on("message",
                  function (nick, to, text, message) {
                    var command = getCommand(text);
@@ -88,7 +128,7 @@ function BaseBot (options) {
                                  new CommandData(nick, to, command[0], command[1], message, that.logger.getChannel(to)));
                      } else {
                        that.client.say(to, "Huh? I don't have that command. Valid commands are: " +
-                           Object.keys(that.availableCommands));
+                           that.availableCommands);
                      }
                    } else { //log non-commands
                      that.logger.log(to, nick, text);
@@ -106,7 +146,10 @@ function BaseBot (options) {
     console.log("Loaded %s", command);
   };
 
-  _.forEach(commands, function (command_list) {
+  this.findCommands();
+  this.findInlines();
+
+  _.forEach(this.commands, function (command_list) {
     _.forEach(Object.keys(command_list), function (event) {
       this.loadCommand(event, command_list[event]);
       this.availableCommands.push(event);
@@ -127,4 +170,4 @@ function getCommand(text) {
 
 module.exports.BaseBot = BaseBot;
 module.exports.CommandData = CommandData;
-module.exports.baseCommands = baseCommands;
+
