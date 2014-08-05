@@ -84,5 +84,14 @@ module.exports = {
       console.log("Argument: %s", util.inspect(item));
     });
     bot.say(command.origin, "message logged");
+  }, 
+
+  reload: function (bot, command) {
+    bot.reloadCommands();
+  },
+
+  help: function (bot, command) {
+    bot.say(command.origin, "Available commands: " + bot.availableCommands);
+    bot.say(command.origin, "Available inlines: " + _.pluck(bot.inlines, 'regexp'));
   }
 };
