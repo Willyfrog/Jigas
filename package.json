@@ -3,22 +3,33 @@
   "version": "0.0.1",
   "description": "Yet another IRC bot with plugins. It is a rewrite of a previous hygas bot in nodejs",
   "main": "index.js",
-  "repository": {"type": "git", "url": "https://github.com/Willyfrog/Jigas.git"},
-  "bugs": {"url": "https://github.com/Willyfrog/Jigas/issues",
-           "email": "guivaya@gmail.com"},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Willyfrog/Jigas.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Willyfrog/Jigas/issues",
+    "email": "guivaya@gmail.com"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "bin": {"jigas": "./index.js"},
+  "bin": {
+    "jigas": "./index.js"
+  },
   "keywords": [
     "hygas",
     "irc",
     "bot"
   ],
-  "author": {"name": "Guillermo Vaya", "email": "guivaya@gmail.com"},
+  "author": {
+    "name": "Guillermo Vaya",
+    "email": "guivaya@gmail.com"
+  },
   "license": "MIT",
   "dependencies": {
     "irc": "^0.3.7",
-    "lodash": "^2.4.1"
+    "lodash": "^2.4.1",
+    "request": "^2.40.0"
   }
 }
