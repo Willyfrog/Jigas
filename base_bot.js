@@ -219,7 +219,7 @@ util.inherits(BaseBot, process.EventEmitter);
 
 
 function getCommand(text) {
-  var command = text.match(/!(\w+)\s*(.*)/);
+  var command = text.match(/^!(\w+)\s*(.*)/);
   if (command != null) {
     return [command[1], command[2]];
   }
